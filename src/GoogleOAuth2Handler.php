@@ -34,6 +34,7 @@ class GoogleOAuth2Handler
         $this->client->setAccessType('offline');
         $this->client->setApprovalPrompt('force');
 
+        
         foreach($this->scopes as $scope)  {
             $this->client->addScope($scope);
         }
