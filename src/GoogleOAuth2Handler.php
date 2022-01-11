@@ -9,17 +9,17 @@ class GoogleOAuth2Handler
     private $clientId;
     private $clientSecret;
     private $scopes;
-    private $refreshToken;
+    private $clientCredentials;
     private $client;
     
     public $authUrl;
 
-    public function __construct($clientId, $clientSecret, $scopes, $refreshToken = '')
+    public function __construct($clientId, $clientSecret, $scopes, $clientCredentials = '')
     {
         $this->clientId = $clientId;
         $this->clientSecret = $clientSecret;
         $this->scopes = $scopes;
-        $this->refreshToken = $refreshToken;
+        $this->clientCredentials = $clientCredentials;
 
         $this->setupClient();
     }
@@ -38,9 +38,12 @@ class GoogleOAuth2Handler
         foreach($this->scopes as $scope)  {
             $this->client->addScope($scope);
         }
-
-        if ($this->refreshToken) {
-            $this->client->refreshToken($this->refreshToken);
+        
+        if ($this->clientCredentials) {
+            $this->client->setAccessToken($this->clientCredentials);
+            if ($this->client->isAccessTokenExpired()) {
+                $this->client->refreshToken($this->client->getRefreshToken());
+            }
         } else {
             $this->authUrl = $this->client->createAuthUrl();
         }
@@ -50,7 +53,12 @@ class GoogleOAuth2Handler
     {
         $this->client->authenticate($authCode);
         $accessToken = $this->client->getAccessToken();
-        return $accessToken['refresh_token'];
+        return $accessToken;
+    }
+
+    public function getToken()
+    {
+        return $this->client->getAccessToken();
     }
 
     public function performRequest($method, $url, $body = null)
